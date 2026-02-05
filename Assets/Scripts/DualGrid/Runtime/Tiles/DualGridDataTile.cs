@@ -1,4 +1,5 @@
 using System;
+using DualGrid.Runtime.Components;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 

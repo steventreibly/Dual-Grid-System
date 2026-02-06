@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DualGrid.Runtime.Components;
 using UnityEditor;
 using UnityEngine;
@@ -61,19 +62,6 @@ namespace DualGrid.Editor
 
             return cDualGridTilemap;
         }
-
-        private void OnEnable()
-        {
-            //we want this to fail if target is not the expected type
-            _targetDualGridTilemap = (CDualGridTilemap)target;
-            
-            _hasMultipleTargets = targets.Length > 1;
-
-            if (!_hasMultipleTargets)
-            {
-                //create a list of targets
-            }
-        }
         
         private static void InitializeRenderTilemap(CDualGridTilemap cDualGridTilemap)
         {
@@ -82,11 +70,78 @@ namespace DualGrid.Editor
 
             if (cDualGridTilemap.RenderTilemap == null)
             {
-                //Create Tilemap Object
+                CreateRenderTilemapObject(cDualGridTilemap);
             }
                 
             //Destroy Tilemap Renderer in data tilemap
+            TilemapRenderer renderer = cDualGridTilemap.GetComponent<TilemapRenderer>();
+            DestroyComponentIfExists(renderer, "Dual Grid Tilemaps cannot have TilemapRenderers in the same GameObject. TilemapRenderer has been destroyed.");
+            
             //Update the tilemap collider components
+            TilemapCollider2D tilemapColliderFromDataTilemap = cDualGridTilemap.DataTilemap.GetComponent<TilemapCollider2D>();
+            TilemapCollider2D tilemapColliderFromRenderTilemap = cDualGridTilemap.RenderTilemap.GetComponent<TilemapCollider2D>();
+            
+            //Check if the tilemap colliders are enabled, if not destroy data and render tilemap colliders if they exist
+            
+            //Check if the dualGrid dataTiles to see if they are the following types: None, Sprite, and Grid and handle these cases
+        }
+
+        private void OnEnable()
+        {
+            //we want this to fail if target is not the expected type
+            _targetDualGridTilemap = (CDualGridTilemap)target;
+            
+            _hasMultipleTargets = targets.Length > 1;
+
+            if (_hasMultipleTargets)
+            {
+                _targetDualGridTilemaps = targets.Cast<CDualGridTilemap>().ToList();
+            }
+            else
+            {
+                _targetDualGridTilemaps = new List<CDualGridTilemap>()
+                {
+                    target as CDualGridTilemap
+                };
+            }
+
+            foreach (CDualGridTilemap dualGridTilemap in _targetDualGridTilemaps)
+            {
+                InitializeRenderTilemap(dualGridTilemap);
+            }
+        }
+
+        /// <summary>
+        ///     Creates a new Render Tilemap that is offset from the provided dataTilemap by half a tile in the x,y 
+        /// </summary>
+        /// <param name="targetDataTilemap">The dataTilemap we want to render</param>
+        /// <returns>A new Render Tilemap</returns>
+        internal static GameObject CreateRenderTilemapObject(CDualGridTilemap targetDataTilemap)
+        {
+            GameObject renderTilemapGO = new GameObject("RenderTilemap")
+            {
+                transform =
+                {
+                    parent = targetDataTilemap.transform,
+                    localPosition = new Vector3(-0.5f, -0.5f, 0f)
+                }
+            };
+
+            renderTilemapGO.AddComponent<Tilemap>();
+            renderTilemapGO.AddComponent<TilemapRenderer>();
+            
+            return renderTilemapGO;
+        }
+
+        private static void DestroyComponentIfExists(Component component, string warningMessage = null)
+        {
+            if (component == null) 
+                return;
+            
+            if (warningMessage != null)
+                Debug.LogWarning(warningMessage);
+                
+            DestroyImmediate(component);
         }
     }
 }

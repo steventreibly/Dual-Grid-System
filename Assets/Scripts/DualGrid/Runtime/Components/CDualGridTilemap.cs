@@ -14,15 +14,15 @@ namespace DualGrid.Runtime.Components
     public class CDualGridTilemap : MonoBehaviour
     {
         [field: SerializeField] 
-        public DualGridRuleTile RenderTile { get; internal set; }
+        public DualGridRuleTile RenderTile { get; set; }
 
         public DualGridDataTile DataTile => RenderTile.DataTile;
     
         [field: SerializeField]
-        public bool EnableTilemapCollider { get; internal set; }
+        public bool EnableTilemapCollider { get; set; }
     
         [field: SerializeField]
-        public OriginEnum GameObjectOrigin { get; internal set; }
+        public OriginEnum GameObjectOrigin { get; set; }
 
         [field: SerializeField]
         public Tilemap DataTilemap { get; private set; }

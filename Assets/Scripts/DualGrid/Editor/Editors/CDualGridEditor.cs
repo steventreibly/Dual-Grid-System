@@ -80,8 +80,7 @@ namespace DualGrid.Editor
             }
                 
             //Destroy Tilemap Renderer in data tilemap
-            TilemapRenderer renderer = cDualGridTilemap.GetComponent<TilemapRenderer>();
-            DestroyComponentIfExists(renderer, "Dual Grid Tilemaps cannot have TilemapRenderers in the same GameObject. TilemapRenderer has been destroyed.");
+            DestroyTilemapRendererInDataTilemap(cDualGridTilemap);
             
             UpdateTilemapColliderComponents(cDualGridTilemap);
         }
@@ -115,7 +114,7 @@ namespace DualGrid.Editor
         private static void DestroyTilemapRendererInDataTilemap(CDualGridTilemap cDualGridTilemap)
         {
             TilemapRenderer renderer = cDualGridTilemap.GetComponent<TilemapRenderer>();
-            //DestroyComponentIfExists(renderer, "Dual Grid Tilemaps cannot have Tilemap Renderers in the same GameObject. TilemapRenderer has been destroyed.");
+            DestroyComponentIfExists(renderer, "Dual Grid Tilemaps cannot have Tilemap Renderers in the same GameObject. TilemapRenderer has been destroyed.");
         }
 
         /// <summary>

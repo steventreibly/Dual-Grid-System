@@ -3,7 +3,7 @@ namespace DualGrid.Utils
     public class DualGridNeighbor
     {
         /// <summary>
-        ///     The Dual Grid Rule Tile will check if the contents of the data tile in that direction in filled.
+        ///     The Dual Grid Rule Tile will check if the contents of the data tile in that direction is filled.
         ///     If not, the rule will fail
         /// </summary>
         public const int Filled = 1;

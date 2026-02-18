@@ -1,5 +1,6 @@
 using System;
 using DualGrid.Runtime.Components;
+using DualGrid.Runtime.Extensions;
 using DualGrid.Utils;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -108,6 +109,65 @@ namespace DualGrid.Tiles
             _dataTile.gameObject = this.m_DefaultGameObject;
             
             return _dataTile;
+        }
+
+        /// <summary>
+        ///     Used to determine if there is a rule match given a Tiling rule and neighboring Tiles
+        /// </summary>
+        /// <param name="ruleToValidate">The Tiling Rule to match with</param>
+        /// <param name="renderTilePosition">The position of the tile on the tilemap</param>
+        /// <param name="tilemap">the tilemap to match with</param>
+        /// <param name="transform">transform matrix which will match the Rule</param>    
+        /// <returns>returns true if there is a match and false if not</returns>
+        public override bool RuleMatches(TilingRule ruleToValidate, Vector3Int renderTilePosition, ITilemap tilemap,
+            ref Matrix4x4 transform)
+        {
+            if (GetDataTilemap(tilemap) == null)
+                return false;
+
+            Vector3Int[] dataTilemapPositions = DualGridUtils.GetDataTilePositions(renderTilePosition);
+
+            foreach (Vector3Int dataTilePosition in dataTilemapPositions)
+            {
+                //TODO: If the rule does not match with the data tile return false
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ruleToValidate"></param>
+        /// <param name="dataTilePosition"></param>
+        /// <param name="renderTilePosition"></param>
+        /// <returns></returns>
+        private bool DoesRuleMatchWithDataTile(TilingRule ruleToValidate, Vector3Int dataTilePosition,
+            Vector3Int renderTilePosition)
+        {
+            Vector3Int dataTileOffset = dataTilePosition - renderTilePosition;
+            
+            int neighborIndex = ruleToValidate.GetNeighborIndex(dataTileOffset);
+            
+            //If no neighbor is defined, then it will match with anything
+            if (neighborIndex == -1)
+                return true;
+
+            //TODO: Check that editor specific preview tiles are only considered when running inside the Unity Editor
+
+            var neighborDataTile = _dataTilemap.GetTile(dataTilePosition);
+            
+            return RuleMatch(ruleToValidate.m_Neighbors[neighborIndex], neighborDataTile);
+        }
+
+        private Tilemap GetDataTilemap(ITilemap tilemap)
+        {
+            if (_cDualGridTilemap == null || _cDualGridTilemap.DataTilemap == null)
+            {
+                SetDataTilemap(tilemap);
+            }
+            
+            return _dataTilemap;
         }
 
         /// <summary>

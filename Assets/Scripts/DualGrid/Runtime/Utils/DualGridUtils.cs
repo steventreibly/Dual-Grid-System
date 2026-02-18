@@ -80,7 +80,7 @@ public static class DualGridUtils
     }
 
     /// <summary>
-    ///     Converts a valid data tile offset, used to offset a RenderTilePosition into a DataTilePositon,
+    ///     Converts a valid data tile offset. Used to offset a RenderTilePosition into a DataTilePositon,
     ///     into a valid neighbor offset, used by Unity's Tilemap to calculate neighbors and apply rule tiles.
     ///     Note: This is only valid for data tile offsets, aka, negative offsets
     /// </summary>

@@ -129,7 +129,10 @@ namespace DualGrid.Tiles
 
             foreach (Vector3Int dataTilePosition in dataTilemapPositions)
             {
-                //TODO: If the rule does not match with the data tile return false
+                if (!DoesRuleMatchWithDataTile(ruleToValidate, dataTilePosition, renderTilePosition))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -153,13 +156,47 @@ namespace DualGrid.Tiles
             if (neighborIndex == -1)
                 return true;
 
-            //TODO: Check that editor specific preview tiles are only considered when running inside the Unity Editor
-
+            //Ensures that EditorPreviewTiles are only considered when running inside the Unity Editor
+    #if UNITY_EDITOR
+            var neighborDataTile = _dataTilemap.GetEditorPreviewTile(dataTilePosition);
+            if (neighborDataTile == null) 
+                neighborDataTile = _dataTilemap.GetTile(dataTilePosition);
+    #else
             var neighborDataTile = _dataTilemap.GetTile(dataTilePosition);
+    #endif
             
             return RuleMatch(ruleToValidate.m_Neighbors[neighborIndex], neighborDataTile);
         }
 
+        /// <summary>
+        ///     Checks if there is a match given the neighbor matching rule and a Tile.
+        /// </summary>
+        /// <param name="neighbor">Neighbor matching rule.</param>
+        /// <param name="other">Tile to match.</param>
+        /// <returns>True if there is a match, False if not.</returns>
+        public override bool RuleMatch(int neighbor, TileBase other)
+        {
+            //Is the neighbor a preview tile that is currently empty
+            bool isEmptyPreviewTile = other is DualGridPreviewTile dualGridPreviewTile &&
+                                      dualGridPreviewTile.IsFilled == false;
+
+            return neighbor switch
+            {
+                DualGridNeighbor.Filled => !isEmptyPreviewTile && other != null,
+                DualGridNeighbor.NotFilled => isEmptyPreviewTile || other == null, 
+                _ => true //  "_" here means any other case, essentially our "default" case for which we return true
+            };
+        }
+
+        /// <summary>
+        ///     data tilemap getter, which will attempt to set it using the <paramref name="tilemap"/> if the <see cref="_dataTilemap"/> is null
+        /// </summary>
+        /// <para>
+        ///     This is an attempt to combat Unity's execution order as there are certain moments where <see cref="StartUp"/> in RuleTile base has yet to be called but
+        ///     the tile is being updated. If the data tilemap would be null, the rule matching will not work properly.
+        /// </para>
+        /// <param name="tilemap"></param>
+        /// <returns>the <see cref="_dataTilemap"/> field</returns>
         private Tilemap GetDataTilemap(ITilemap tilemap)
         {
             if (_cDualGridTilemap == null || _cDualGridTilemap.DataTilemap == null)

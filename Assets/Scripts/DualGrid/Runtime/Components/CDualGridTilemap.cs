@@ -25,14 +25,46 @@ namespace DualGrid.Runtime.Components
         public OriginEnum GameObjectOrigin { get; set; }
 
         [field: SerializeField]
-        public Tilemap DataTilemap { get; private set; }
-    
-        [field: SerializeField]
-        public Tilemap RenderTilemap { get; private set; }
+        private Tilemap _dataTilemap;
+        public Tilemap DataTilemap
+        {
+            get
+            {
+                if (_dataTilemap == null)
+                    _dataTilemap = GetComponent<Tilemap>();
+                return _dataTilemap;
+            }
+        }
 
+        [field: SerializeField]
+        private Tilemap _renderTilemap;
+
+        public Tilemap RenderTilemap
+        {
+            get
+            {
+                if (_renderTilemap == null)
+                    _renderTilemap = transform.GetComponentInImmediateChildren<Tilemap>();
+                return _renderTilemap;
+            }
+        }
+
+        private void Awake()
+        {
+            if (_dataTilemap == null)
+                _dataTilemap = GetComponent<Tilemap>();
+            if (_renderTilemap == null)
+                _renderTilemap = transform.GetComponentInImmediateChildren<Tilemap>();
+        }
+        
         private void OnEnable()
         {
             Tilemap.tilemapTileChanged += HandleTilemapChange;
+        }
+
+        private void OnDisable()
+        {
+            Tilemap.tilemapTileChanged -= HandleTilemapChange;
         }
 
         /// <summary>
@@ -85,8 +117,50 @@ namespace DualGrid.Runtime.Components
 
             foreach (Vector3Int renderTilePosition in DualGridUtils.GetRenderTilePositions(dataTilePosition))
             {
-            
+                if (hasDataTile)
+                {
+                    SetRenderTile(renderTilePosition);
+                }
+                else
+                {
+                    UnsetRenderTile(renderTilePosition);
+                }
             }
+        }
+
+        private void SetRenderTile(Vector3Int renderTilePosition)
+        {
+            if (!RenderTilemap.HasTile(renderTilePosition))
+            {
+                RenderTilemap.SetTile(renderTilePosition, RenderTile);
+            }
+            else
+            {
+                RenderTilemap.RefreshTile(renderTilePosition);
+            }
+        }
+
+        private void UnsetRenderTile(Vector3Int renderTilePosition)
+        {
+            if (RenderTilemap.HasTile(renderTilePosition) && !IsInUseByDataTilemap(renderTilePosition))
+            {
+                RenderTilemap.SetTile(renderTilePosition, null);
+            }
+            else
+            {
+                RenderTilemap.RefreshTile(renderTilePosition);
+            }
+        }
+
+        private bool IsInUseByDataTilemap(Vector3Int renderTilePosition)
+        {
+            foreach (Vector3Int dataTilePosition in DualGridUtils.GetDataTilePositions(renderTilePosition))
+            {
+                if (DataTilemap.HasTile(dataTilePosition))
+                    return true;
+            }
+
+            return false;
         }
     }
 }

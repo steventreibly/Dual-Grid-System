@@ -72,7 +72,7 @@ namespace DualGrid.Runtime.Components
         /// </summary>
         /// <param name="tilemap"></param>
         /// <param name="tileChanges"></param>
-        private void HandleTilemapChange(Tilemap tilemap, Tilemap.SyncTile[] tileChanges)
+        public void HandleTilemapChange(Tilemap tilemap, Tilemap.SyncTile[] tileChanges)
         {
             if (tilemap == DataTilemap)
             {

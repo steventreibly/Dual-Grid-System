@@ -434,8 +434,8 @@ MonoBehaviour:
   <RenderTile>k__BackingField: {fileID: 0}
   <EnableTilemapCollider>k__BackingField: 0
   <GameObjectOrigin>k__BackingField: 0
-  <DataTilemap>k__BackingField: {fileID: 0}
-  <RenderTilemap>k__BackingField: {fileID: 0}
+  _dataTilemap: {fileID: 1144458567}
+  _renderTilemap: {fileID: 1307980644}
 --- !u!1839735485 &1144458567
 Tilemap:
   m_ObjectHideFlags: 0

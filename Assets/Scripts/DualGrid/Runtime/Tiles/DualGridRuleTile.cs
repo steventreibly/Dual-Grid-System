@@ -40,7 +40,7 @@ namespace DualGrid.Tiles
         }
         
         [field: SerializeField, HideInInspector] 
-        public Texture2D OriginalTexture { get; internal set; }
+        public Texture2D OriginalTexture { get; set; }
         
         /// <summary>
         ///     Force sets the actual Data Tilemap before updating the tile

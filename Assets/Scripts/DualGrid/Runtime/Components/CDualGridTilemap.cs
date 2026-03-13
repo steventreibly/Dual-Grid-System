@@ -101,7 +101,7 @@ namespace DualGrid.Runtime.Components
             }
         
             RenderTilemap.ClearAllTiles();
-            foreach (var position in DataTilemap.cellBounds.allPositionsWithin)
+            foreach (Vector3Int position in DataTilemap.cellBounds.allPositionsWithin)
             {
                 if (DataTilemap.HasTile(position))
                 {

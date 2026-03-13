@@ -47,8 +47,7 @@ namespace DualGrid.Editor.Extensions
 
                 if (shouldAutoSlice)
                 {
-                    //TODO: Create a menu to apply the config preset for assets that have been auto sliced by the standard 16x tiles}
-                    
+                    AutoDualGridRuleTileProvider.ApplyConfigurationPreset(ref dualGridRuleTile);
                 }
                 
                 return true;

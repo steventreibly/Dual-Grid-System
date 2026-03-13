@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using DualGrid.Editor.Extensions;
+using DualGrid.Runtime.Components;
 using DualGrid.Tiles;
 using Unity.Plastic.Antlr3.Runtime.Misc;
 using UnityEditor;
@@ -73,8 +75,25 @@ namespace DualGrid.Editor
                 return false;
             }
             
-            //TODO: Return data we're actually interested in
-            return default;
+            EditorGUI.BeginChangeCheck();
+            EditorGUI.showMixedValue = _hasMultipleTargets &&
+                                       _targetDualGridRuleTiles.HasDifferentValues(dualGridRuleTile =>
+                                           dualGridRuleTile.OriginalTexture);
+            Texture2D appliedTexture = EditorGUILayout.ObjectField(RuleTileEditorStyles.OriginalTexture,
+                _targetDualGridRuleTile.OriginalTexture, typeof(Texture2D), false) as Texture2D;
+            if (EditorGUI.EndChangeCheck())
+            {
+                foreach (var dualGridRuleTile in _targetDualGridRuleTiles)
+                {
+                    bool wasTextureApplied = dualGridRuleTile.TryApplyTexture2D(appliedTexture);
+                    if (!wasTextureApplied)
+                        break; //Invalid texture, stop applying to other selected tiles
+                }
+            }
+            
+            EditorGUI.showMixedValue = false;
+            
+            return appliedTexture != null;
         }
 
         private void DrawDragAndDropArea()
@@ -119,8 +138,101 @@ namespace DualGrid.Editor
             {
                 foreach (var dualGridRuleTile in _targetDualGridRuleTiles)
                 {
-                    //TODO: Need an editor extension to check if the sprite is split in 16x sprites, otherwise the texture is incompatible
-                    
+                    bool wasTextureApplied = dualGridRuleTile.TryApplyTexture2D(texture);
+                    if (!wasTextureApplied)
+                    {
+                        Debug.LogWarning($"The texture for {dualGridRuleTile} was invalid, application of texture to other tiles has stopped.");
+                        return; //Invalid texture, stop applying to other selected tiles
+                    }
+                }
+                
+                Repaint();
+            }
+        }
+
+        /// <summary>
+        ///     Returns true if the Inspector should interrupt the drawing pipeline
+        /// </summary>
+        /// <returns></returns>
+        protected virtual bool DrawRuleTileSettings()
+        {
+            EditorGUILayout.LabelField("Dual Grid Settings", EditorStyles.boldLabel);
+
+            bool shouldUpdateAffectedModules = false;
+            
+            EditorGUI.BeginChangeCheck();
+            EditorGUI.showMixedValue = _hasMultipleTargets &&
+                                       _targetDualGridRuleTiles.HasDifferentValues(dualGridRuleTile =>
+                                           dualGridRuleTile.m_DefaultSprite);
+            Sprite defaultSprite = EditorGUILayout.ObjectField(RuleTileEditorStyles.OriginalTexture,
+                _targetDualGridRuleTiles.First().m_DefaultSprite, typeof(Sprite), false) as Sprite;
+            if (EditorGUI.EndChangeCheck())
+            {
+                _targetDualGridRuleTiles.ForEach(dualGridRuleTile => dualGridRuleTile.m_DefaultSprite = defaultSprite);
+                shouldUpdateAffectedModules = true;
+            }
+            
+            EditorGUI.BeginChangeCheck();
+            EditorGUI.showMixedValue = _hasMultipleTargets &&
+                                       _targetDualGridRuleTiles.HasDifferentValues(dualGridRuleTile =>
+                                           dualGridRuleTile.m_DefaultGameObject);
+            var defaultGameObject = EditorGUILayout.ObjectField(RuleTileEditorStyles.DefaultGameObject,
+                tile.m_DefaultGameObject, typeof(GameObject), false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                _targetDualGridRuleTiles.ForEach(dualGridRuleTile =>
+                    dualGridRuleTile.m_DefaultGameObject = (GameObject)defaultGameObject);
+                shouldUpdateAffectedModules = true;
+            }
+            
+            EditorGUI.showMixedValue = false;
+            EditorGUILayout.Space();
+
+            if (shouldUpdateAffectedModules)
+            {
+                _targetDualGridRuleTile.RefreshDataTile();
+
+                var dualGridRuleTiles = FindObjectsByType<CDualGridTilemap>(FindObjectsSortMode.None);
+                
+                //TODO: Loop through dualGridRuleTiles and look to see the targetDualGridRuleTiles contain a renderTile, if so, update the collider and refresh the tilemap
+            }
+            
+            //TODO:Return the actual value
+            return default;
+        }
+
+        public override void RuleMatrixOnGUI(RuleTile tile, Rect rect, BoundsInt bounds, RuleTile.TilingRule tilingRule)
+        {
+            //TODO: investigate how to extend This to accomodate the DualGrid
+            //The code below is the same as the base.RuleMatrixOnGUI. 
+            Handles.color = EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.2f) : new Color(0f, 0f, 0f, 0.2f);
+            var w = rect.width / bounds.size.x;
+            var h = rect.height / bounds.size.y;
+
+            for (var y = 0; y <= bounds.size.y; y++)
+            {
+                var top = rect.yMin + y * h;
+                Handles.DrawLine(new Vector3(rect.xMin, top), new Vector3(rect.xMax, top));
+            }
+
+            for (var x = 0; x <= bounds.size.x; x++)
+            {
+                var left = rect.xMin + x * w;
+                Handles.DrawLine(new Vector3(left, rect.yMin), new Vector3(left, rect.yMax));
+            }
+
+            Handles.color = Color.white;
+
+            var neighbors = tilingRule.GetNeighbors();
+
+            for (var y = bounds.yMin; y < bounds.yMax; y++)
+            {
+                for (var x = bounds.xMin; x < bounds.xMax; x++)
+                {
+                    var pos = new Vector3Int(x, y, 0);
+                    var r = new Rect(rect.xMin + (x - bounds.xMin) * w, rect.yMin + (-y + bounds.yMax - 1) * h, w - 1,
+                        h - 1);
+                    RuleMatrixIconOnGUI(tilingRule, neighbors, pos, r);
                 }
             }
         }

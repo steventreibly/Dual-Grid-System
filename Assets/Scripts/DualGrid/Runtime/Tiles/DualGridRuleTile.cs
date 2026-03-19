@@ -8,10 +8,13 @@ using UnityEngine.Tilemaps;
 namespace DualGrid.Tiles
 {
     /// <summary>
-    /// Custom <see cref="RuleTile"/> used by the <see cref="CDualGridTilemap"/> to generate tiles in the Render Tilemap
+    ///     Custom <see cref="RuleTile"/> used by the <see cref="CDualGridTilemap"/> to generate tiles in the Render Tilemap.
+    ///<para>
+    ///     It is necessary to create this custom class so that RuleTiles no longer utilize the 3x3 matrix grid
+    ///</para>
     ///<remarks>
-    /// Avoid using this tile in a palette, any other data tile can be used.
-    /// This tile type will be used in all Render Tilemaps.
+    ///     Avoid using this tile in a palette, any other data tile can be used.
+    ///     This tile type will be used in all Render Tilemaps.
     /// </remarks>
     /// </summary>
     [Serializable]
@@ -193,7 +196,7 @@ namespace DualGrid.Tiles
         /// </summary>
         /// <para>
         ///     This is an attempt to combat Unity's execution order as there are certain moments where <see cref="StartUp"/> in RuleTile base has yet to be called but
-        ///     the tile is being updated. If the data tilemap would be null, the rule matching will not work properly.
+        ///     the tile is being updated. If the data tilemap will be null, the rule matching will not work properly.
         /// </para>
         /// <param name="tilemap"></param>
         /// <returns>the <see cref="_dataTilemap"/> field</returns>

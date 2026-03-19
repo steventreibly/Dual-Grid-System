@@ -13,7 +13,9 @@ namespace DualGrid.Editor
         public static readonly GUIContent DefaultCollider = EditorGUIUtility.TrTextContent("Collider",
             "The collider type that will be used for this Dual Grid Rule Tile.");
 
-        public static readonly GUIContent OriginalTexture = EditorGUIUtility.TrTextContent("Oringal Texture", "The original Texture2D associated with this Dual Grid Rule Tile. Only textures split into 16 pieces are considered valid.");
+        public static readonly GUIContent OriginalTexture = EditorGUIUtility.TrTextContent("Original Texture", "The original Texture2D associated with this Dual Grid Rule Tile. Only textures split into 16 pieces are considered valid.");
+
+        public static readonly GUIContent TilingRules = EditorGUIUtility.TrTextContent("TilingRules List");
         
         public static readonly GUIStyle extendNeighborsDarkStyle = new GUIStyle()
         {

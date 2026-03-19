@@ -4,6 +4,7 @@ using DualGrid.Editor.Extensions;
 using DualGrid.Runtime.Components;
 using DualGrid.Tiles;
 using Unity.Plastic.Antlr3.Runtime.Misc;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -201,10 +202,20 @@ namespace DualGrid.Editor
             return default;
         }
 
-        public override void RuleMatrixOnGUI(RuleTile tile, Rect rect, BoundsInt bounds, RuleTile.TilingRule tilingRule)
+        /// <summary>
+        ///     Draws a Rule Matrix for the given Rule for a RuleTile.
+        /// <remarks>
+        ///     Most of this is the base function, except for looping through the rows and columns.
+        ///     This has been changed to limit the grid to a 2x2 matrix rather than 3x3.
+        /// </remarks>
+        /// </summary>
+        /// <param name="ruleTile">Tile to draw rule for.</param>
+        /// <param name="rect">GUI Rect to draw rule at.</param>
+        /// <param name="bounds">Cell bounds of the Rule.</param>
+        /// <param name="tilingRule">Rule to draw Rule Matrix for.</param>
+        public override void RuleMatrixOnGUI(RuleTile ruleTile, Rect rect, BoundsInt bounds, RuleTile.TilingRule tilingRule)
         {
-            //TODO: investigate how to extend This to accomodate the DualGrid
-            //The code below is the same as the base.RuleMatrixOnGUI. 
+            //The code below is the same as the base.RuleMatrixOnGUI. Comments indicate what has been changed to accomodate the dual grid
             Handles.color = EditorGUIUtility.isProSkin ? new Color(1f, 1f, 1f, 0.2f) : new Color(0f, 0f, 0f, 0.2f);
             var w = rect.width / bounds.size.x;
             var h = rect.height / bounds.size.y;
@@ -225,9 +236,11 @@ namespace DualGrid.Editor
 
             var neighbors = tilingRule.GetNeighbors();
 
-            for (var y = bounds.yMin; y < bounds.yMax; y++)
+            //Limits the grid to only 2 rows
+            for (var y = -1; y < 1; y++)
             {
-                for (var x = bounds.xMin; x < bounds.xMax; x++)
+                //Limits the grid to only 2 columns
+                for (var x = -1; x < 1; x++)
                 {
                     var pos = new Vector3Int(x, y, 0);
                     var r = new Rect(rect.xMin + (x - bounds.xMin) * w, rect.yMin + (-y + bounds.yMax - 1) * h, w - 1,
@@ -235,6 +248,73 @@ namespace DualGrid.Editor
                     RuleMatrixIconOnGUI(tilingRule, neighbors, pos, r);
                 }
             }
+        }
+
+        /// <summary>
+        ///     Get the GUI bounds for a Rule.
+        /// <para>
+        ///     Returns the bounds for a 2x2 grid.
+        ///     Essentially returns:
+        /// </para>
+        ///     (-1, 0) (0, 0)
+        ///<para> (-1, -1) (0, -1) </para>
+        /// </summary>
+        /// <param name="bounds">Cell bounds of the Rule.</param>
+        /// <param name="tilingRule">Rule to get GUI bounds for.</param>
+        /// <returns>The GUI bounds for a rule.</returns>
+        public override BoundsInt GetRuleGUIBounds(BoundsInt bounds, RuleTile.TilingRule tilingRule)
+        {
+            return new BoundsInt(-1, -1, 0, 1, 1, 0);
+        }
+
+        /// <summary>
+        ///     Gets the GUI matrix size for a Rule of a RuleTile
+        /// </summary>
+        /// <param name="bounds">Cell bounds of the Rule.</param>
+        /// <returns>Returns the GUI matrix size for a Rule of a RuleTile.</returns>
+        public override Vector2 GetMatrixSize(BoundsInt bounds)
+        {
+            //TODO: Review this number, adjust size as needed
+            float matrixCellSize = 18.0f;
+            return new Vector2(bounds.size.x * matrixCellSize, bounds.size.y * matrixCellSize);
+        }
+
+        /// <summary>
+        ///     Draws the Rule element for the Rule list
+        /// <remarks>
+        ///     Overriden only to change the RuleInspectorOnGUI call.
+        /// </remarks>
+        /// </summary>
+        /// <param name="rect">Rect to draw the Rule Element in</param>
+        /// <param name="index">Index of the Rule Element to draw</param>
+        /// <param name="isActive">Whether the Rule Element is active</param>
+        /// <param name="isFocused">Whether the Rule Element is focused</param>
+        protected override void OnDrawElement(Rect rect, int index, bool isActive, bool isFocused)
+        {
+            var rule = tile.m_TilingRules[index];
+            var bounds = GetRuleGUIBounds(rule.GetBounds(), rule);
+
+            var yPos = rect.yMin + 2f;
+            var height = rect.height - k_PaddingBetweenRules;
+            var matrixSize = GetMatrixSize(bounds);
+
+            var spriteRect = new Rect(rect.xMax - k_DefaultElementHeight - 5f, yPos, k_DefaultElementHeight,
+                k_DefaultElementHeight);
+            var matrixRect = new Rect(rect.xMax - matrixSize.x - spriteRect.width - 10f, yPos, matrixSize.x,
+                matrixSize.y);
+            var inspectorRect = new Rect(rect.xMin, yPos, rect.width - matrixSize.x - spriteRect.width - 20f, height);
+
+            RuleInspectorOnGUI(inspectorRect, rule);
+            RuleMatrixOnGUI(tile, matrixRect, bounds, rule);
+            SpriteOnGUI(spriteRect, rule);
+        }
+        
+        protected virtual void DualGridRuleInspectorOnGUI(Rect rect, RuleTile.TilingRule tilingRule)
+        {
+            float y = rect.yMin;
+            GUI.Label(new Rect(rect.xMin, y, k_LabelWidth, k_SingleLineHeight), RuleTileEditorStyles.TilingRules);
+            tilingRule.m_GameObject = (GameObject)EditorGUI.ObjectField(new Rect(rect.xMin + k_LabelWidth, y, rect.width - k_LabelWidth, k_SingleLineHeight), "", tilingRule.m_GameObject, typeof(GameObject), false);
+            y += k_SingleLineHeight;
         }
 
         private float GetElementHeight(int index)
